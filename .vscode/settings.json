@@ -1,0 +1,10 @@
+{
+    "Lua.runtime.version": "LuaJIT",
+    "Lua.runtime.special": {
+        "love.filesystem.load": "loadfile"
+    },
+    "Lua.workspace.library": [
+        "${3rd}/love2d/library"
+    ],
+    "pixelbyte.love2d.path": "/usr/bin/love-11.3"
+}
