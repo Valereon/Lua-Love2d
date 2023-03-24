@@ -61,7 +61,7 @@ function UserInput()
         local theta = math.rad(Player.rotX) * math.pi / 180
         local x = math.cos(theta)
         local y = math.sin(theta)
-        table.insert(TableProjectiles, {x=0,y=0,speed=.5,velocityX=x, velocityY=y})    
+        table.insert(TableProjectiles, {x=Player.x +(math.cos(math.rad(Player.rotX)) + .5),y=Player.x +(math.sin(math.rad(Player.rotX)) + .5),speed=.5,velocityX=5, velocityY=5})    
     else
         Shot = false
     end
@@ -82,8 +82,8 @@ end
 
 function UpdateProjectiles()
     for i = 1, #TableProjectiles, 1 do
-        TableProjectiles[i].x = TableProjectiles[i].x + TableProjectiles[i].velocityX
-        TableProjectiles[i].y = TableProjectiles[i].y + TableProjectiles[i].velocityY
+        TableProjectiles[i].x = TableProjectiles[i].x * TableProjectiles[i].velocityX * math.cos(math.rad(Player.rotX))
+        TableProjectiles[i].y = TableProjectiles[i].y * TableProjectiles[i].velocityY * math.sin(math.rad(Player.rotX))
         if TableProjectiles[i].velocityX > 0 then
             TableProjectiles[i].velocityX = TableProjectiles[i].velocityX + TableProjectiles[i].speed
         end
@@ -95,6 +95,6 @@ function UpdateProjectiles()
         end
         if TableProjectiles[i].velocityY < 0 then
             TableProjectiles[i].velocityY = TableProjectiles[i].velocityY - TableProjectiles[i].speed
-        end        
+        end
     end
 end
