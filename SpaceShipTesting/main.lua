@@ -1,24 +1,25 @@
 
 
+
 function love.load()
     Player = {x=200,y=200,speed=.5,velocityX=0,velocityY=0,drag=.95, rotX=0, rotSpeed=3,maxSpeed=5,}
     SpritePlayer = love.graphics.newImage("Sprites/space.png")
-
     TableProjectiles = {}
-    
-    Asteroid = {x=0,y=0,speed=.5,velocityX=0,velocityY=0,mass=10}
-    
-
-    -- World = love.physics.newWorld(0,200, true)
+    -- Asteroid = {x=0,y=0,speed=.5,velocityX=0,velocityY=0,mass=10}
 end
 
 
 
 
 function love.draw()
-    love.graphics.draw(SpritePlayer, Player.x, Player.y, math.rad(Player.rotX), .5, .5, 32, 32, 0, 0)
+    love.graphics.draw(SpritePlayer, Player.x, Player.y, math.rad(Player.rotX) + math.rad(90), .5, .5, 32, 32, 0, 0)
     if #TableProjectiles > 0 then
-        love.graphics.circle("line", math.cos(math.rad(Player.rotX)) + Player.x, math.tan(math.rad(Player.rotX)) + Player.y, 5)
+        for i = 1, #TableProjectiles, 1 do
+            love.graphics.circle("line",TableProjectiles[i].x + Player.x + 100 * math.cos(math.rad(Player.rotX)),
+                                        TableProjectiles[i].x + Player.y + 100 * math.sin(math.rad(Player.rotX)), 5)
+        end
+
+        print(Player.rotX)
     end
         
         
@@ -26,8 +27,13 @@ end
 
 function love.update(dt)
     UserInput()
-    UpdateProjectiles() 
-    
+    UpdateProjectiles()
+    if Player.rotX > 360 then
+        Player.rotX = Player.rotX - 360
+    end
+    if Player.rotX < -360 then
+        Player.rotX = Player.rotX + 360
+    end
 end
 
 
@@ -52,7 +58,10 @@ function UserInput()
     end
     if love.keyboard.isDown("space") then
         Shot = true
-        table.insert(TableProjectiles, {x=0,y=0,speed=.5,velocityX=0,velocityY=0})
+        local theta = math.rad(Player.rotX) * math.pi / 180
+        local x = math.cos(theta)
+        local y = math.sin(theta)
+        table.insert(TableProjectiles, {x=0,y=0,speed=.5,velocityX=x, velocityY=y})    
     else
         Shot = false
     end
@@ -72,18 +81,20 @@ end
 
 
 function UpdateProjectiles()
-    for key, value in ipairs(TableProjectiles) do
-        if value.velocityX > 0 then
-            value.velocityX = value.velocityX + value.speed
+    for i = 1, #TableProjectiles, 1 do
+        TableProjectiles[i].x = TableProjectiles[i].x + TableProjectiles[i].velocityX
+        TableProjectiles[i].y = TableProjectiles[i].y + TableProjectiles[i].velocityY
+        if TableProjectiles[i].velocityX > 0 then
+            TableProjectiles[i].velocityX = TableProjectiles[i].velocityX + TableProjectiles[i].speed
         end
-        if value.velocityY > 0 then
-            value.velocityY = value.velocityY + value.speed
+        if TableProjectiles[i].velocityX < 0 then
+            TableProjectiles[i].velocityX = TableProjectiles[i].velocityX - TableProjectiles[i].speed
         end
-        if value.velocityX < 0 then
-            value.velocityX = value.velocityX - value.speed
+        if TableProjectiles[i].velocityY > 0 then
+            TableProjectiles[i].velocityY = TableProjectiles[i].velocityY + TableProjectiles[i].speed
         end
-        if value.velocityY < 0 then
-            value.velocityY = value.velocityY - value.speed
-        end
+        if TableProjectiles[i].velocityY < 0 then
+            TableProjectiles[i].velocityY = TableProjectiles[i].velocityY - TableProjectiles[i].speed
+        end        
     end
 end
