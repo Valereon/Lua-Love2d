@@ -12,22 +12,22 @@ end
 
 
 function love.draw()
-    love.graphics.draw(SpritePlayer, Player.x, Player.y, math.rad(Player.rotX) + math.rad(90), .5, .5, 32, 32, 0, 0)
+    love.graphics.draw(SpritePlayer, Player.x, Player.y, math.rad(Player.rotX + 90), .5, .5, 32, 32, 0, 0)
     if #TableProjectiles > 0 then
         for i = 1, #TableProjectiles, 1 do
-            love.graphics.circle("line",TableProjectiles[i].x + Player.x + 100 * math.cos(math.rad(Player.rotX)),
-                                        TableProjectiles[i].x + Player.y + 100 * math.sin(math.rad(Player.rotX)), 5)
+            love.graphics.circle("line",TableProjectiles[i].x,
+                                        TableProjectiles[i].y, 5)
         end
-
-        print(Player.rotX)
     end
+    -- Player.x + (100 * math.sin(math.rad(Player.rotX)))
+    -- + Player.x + (100 * math.cos(math.rad(Player.rotX)))
         
         
 end
 
 function love.update(dt)
     UserInput()
-    UpdateProjectiles()
+    UpdateProjectiles(dt)
     if Player.rotX > 360 then
         Player.rotX = Player.rotX - 360
     end
@@ -61,7 +61,7 @@ function UserInput()
         local theta = math.rad(Player.rotX) * math.pi / 180
         local x = math.cos(theta)
         local y = math.sin(theta)
-        table.insert(TableProjectiles, {x=Player.x +(math.cos(math.rad(Player.rotX)) + .5),y=Player.x +(math.sin(math.rad(Player.rotX)) + .5),speed=.5,velocityX=5, velocityY=5})    
+        table.insert(TableProjectiles, {x=Player.x +(math.cos(math.rad(Player.rotX)) + .5),y=Player.y +(math.sin(math.rad(Player.rotX)) + .5),speed=.5,velocityX=5, velocityY=5, angle=Player.rotX})    
     else
         Shot = false
     end
@@ -80,10 +80,10 @@ function CheckCollision(x1,y1,w1,h1, x2,y2,w2,h2)
 end
 
 
-function UpdateProjectiles()
+function UpdateProjectiles(dt)
     for i = 1, #TableProjectiles, 1 do
-        TableProjectiles[i].x = TableProjectiles[i].x * TableProjectiles[i].velocityX * math.cos(math.rad(Player.rotX))
-        TableProjectiles[i].y = TableProjectiles[i].y * TableProjectiles[i].velocityY * math.sin(math.rad(Player.rotX))
+        TableProjectiles[i].x = TableProjectiles[i].x + (math.cos(math.rad(TableProjectiles[i].angle)) * TableProjectiles[i].velocityX)
+        TableProjectiles[i].y = TableProjectiles[i].y + (math.sin(math.rad(TableProjectiles[i].angle)) * TableProjectiles[i].velocityY)
         if TableProjectiles[i].velocityX > 0 then
             TableProjectiles[i].velocityX = TableProjectiles[i].velocityX + TableProjectiles[i].speed
         end
