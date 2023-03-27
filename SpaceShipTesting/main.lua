@@ -1,9 +1,10 @@
 
-
 function love.load()
-    Camera = require("Libraries/camera")
+    local Camera = require("Libraries/camera")
     Cam = Camera()
-    
+
+ 
+    require("Scripts/placement")
 
     Player = {x=200,y=200,speed=.25,velocityX=0,velocityY=0,drag=.95, rotX=0, rotSpeed=3, mass=10}
     SpritePlayer = love.graphics.newImage("Sprites/space.png")
@@ -12,7 +13,7 @@ function love.load()
     PerMeteorMass = 50
     AsteroidDrag = .95
     TableAsteroids = {}
-    SpawnAsteroids()
+    -- SpawnAsteroids()
 
 
 
@@ -24,10 +25,29 @@ end
 
 function love.draw()
     Cam:attach()
-        -- love.graphics.setColor(0,0,0,255)
-        --player collison box debug
+        local spots = Gridify(Player.x, Player.y)
+
+        local mouseX, mouseY = love.mouse.getPosition()
+        local snapX = math.floor(mouseX / 16) * 16
+        local snapY = math.floor(mouseY / 16) * 16
+        love.graphics.rectangle("fill", snapX - 208, snapY - 96, 16, 16)
+        if love.mouse.isDown(1) then
+            for i = 1, #spots, 1 do
+                if spots[i].x == snapX - 208 and spots[i].y == snapY - 96 then
+                    spots[i].occupied = true
+                end
+            end
+        end
+        for i = 1, #spots, 1 do
+            if spots[i].occupied then
+                love.graphics.rectangle("fill", spots[i].x, spots[i].y, spots[i].width, spots[i].height)
+            end
+        end
+
+        -- for i = 1, #lines, 1 do
+        --     love.graphics.rectangle("line", lines[i].x, lines[i].y, lines[i].width, lines[i].height)
+        -- end
         love.graphics.rectangle("line",Player.x - 8, Player.y - 8, 16,16)
-        -- love.graphics.setColor(255,255,255,255)
         --player sprite
         love.graphics.draw(SpritePlayer, Player.x, Player.y, math.rad(Player.rotX + 90), .25, .25, 32, 32, 0, 0)
 
@@ -143,11 +163,14 @@ function Collisons()
         if playerHit then
             -- print("PLAYER HIT", Player.x, " ", Player.y)
             for AsteroidHit = 1, #TableAsteroids, 250 do
-                FinalVelocity = (100 * Player.velocityX + Player.velocityY)/(Player.mass + TableAsteroids[AsteroidHit].mass)
+                FinalVelocity = (100 * Player.velocityX + Player.velocityY)/(Player.mass + 100)
                 print(FinalVelocity)
+                
             end
             UpdateAstroidPos(FinalVelocity,ast)
+            
         end
+        
         for proj = 1, #TableProjectiles, 1 do
             local hit = CheckCollision(TableAsteroids[ast].x,TableAsteroids[ast].y,TableAsteroids[ast].width,TableAsteroids[ast].height,TableProjectiles[proj].x,TableProjectiles[proj].y,5,5)
             if hit then
