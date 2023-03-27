@@ -5,13 +5,17 @@ function love.load()
     Cam = Camera()
     
 
-    Player = {x=200,y=200,speed=.25,velocityX=0,velocityY=0,drag=.95, rotX=0, rotSpeed=3,}
+    Player = {x=200,y=200,speed=.25,velocityX=0,velocityY=0,drag=.95, rotX=0, rotSpeed=3, mass=10}
     SpritePlayer = love.graphics.newImage("Sprites/space.png")
     TableProjectiles = {}
     Asteroid = {x=0,y=0,speed=.5,velocityX=0,velocityY=0,mass=10,radius=8}
-
+    PerMeteorMass = 50
+    AsteroidDrag = .95
     TableAsteroids = {}
     SpawnAsteroids()
+
+
+
 
 end
 
@@ -53,7 +57,7 @@ function love.update(dt)
     UpdateProjectiles(dt)
     Collisons()
     ProjectileDeletion(dt)
-    print("FPS: ", love.timer.getFPS())
+    -- print("FPS: ", love.timer.getFPS())
     Cam:lookAt(Player.x,Player.y)
     -- if #TableProjectiles > 0 then
         -- print(TableProjectiles[#TableProjectiles].x,TableProjectiles[#TableProjectiles].y)
@@ -137,8 +141,12 @@ function Collisons()
         end
         local playerHit = CheckCollision(TableAsteroids[ast].x,TableAsteroids[ast].y,15,10, Player.x - 8, Player.y - 8, 16,16)
         if playerHit then
-            print("PLAYER HIT", Player.x, " ", Player.y)
-            
+            -- print("PLAYER HIT", Player.x, " ", Player.y)
+            for AsteroidHit = 1, #TableAsteroids, 250 do
+                FinalVelocity = (100 * Player.velocityX + Player.velocityY)/(Player.mass + TableAsteroids[AsteroidHit].mass)
+                print(FinalVelocity)
+            end
+            UpdateAstroidPos(FinalVelocity,ast)
         end
         for proj = 1, #TableProjectiles, 1 do
             local hit = CheckCollision(TableAsteroids[ast].x,TableAsteroids[ast].y,TableAsteroids[ast].width,TableAsteroids[ast].height,TableProjectiles[proj].x,TableProjectiles[proj].y,5,5)
@@ -167,25 +175,25 @@ function SpawnAsteroids()
     -- format is x=?,y=?,width=?,height=?
 
 
-
+    
 
     --Beggning Asteroid
-    table.insert(TableAsteroids, {x=100,y=100,width=10,height=10,health=love.math.random(5,20)})
+    table.insert(TableAsteroids, {x=love.math.random(400,600),y=love.math.random(400,600),width=10,height=10,health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
     --Connecting Asteroids
-    for i = 1, 50, 1 do
-        table.insert(TableAsteroids, {x=love.math.random(1,2000), y=love.math.random(1,2000),width=10,height=10})
+    for i = 1, 1, 1 do
+        table.insert(TableAsteroids, {x=love.math.random(400,600), y=love.math.random(400,600),width=10,height=10, mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
         for j = 1, 250, 1 do
             local dir = love.math.random(1,4)
             if dir == 1 then
-                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x + TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20)})
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x + TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
             elseif dir == 2 then
-                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x - TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20)})
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x - TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
             elseif dir == 3 then
-                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y + TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20)})
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y + TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
             elseif dir == 4 then 
-                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y - TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20)})
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y - TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
             end
-        end    
+        end
     end
     
     
@@ -224,3 +232,10 @@ function AsteroidDamaged(Asteroid, projectile)
 end
 
 
+
+function UpdateAstroidPos(Velocity,index)
+    TableAsteroids[index].x = TableAsteroids[index].x  + Velocity
+    TableAsteroids[index].y = TableAsteroids[index].y  + Velocity
+    TableAsteroids[index].velocityX = TableAsteroids[index].velocityX  * AsteroidDrag
+    TableAsteroids[index].velocityY = TableAsteroids[index].velocityY  * AsteroidDrag
+end
