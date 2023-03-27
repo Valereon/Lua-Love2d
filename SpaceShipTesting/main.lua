@@ -37,7 +37,7 @@ function love.draw()
                                             TableProjectiles[i].y, 2.5)
             end
         end
-    
+ 
         for i = 1, #TableAsteroids, 1 do
             love.graphics.rectangle("fill",TableAsteroids[i].x,TableAsteroids[i].y,
                                         TableAsteroids[i].width,TableAsteroids[i].height)
@@ -52,8 +52,12 @@ function love.update(dt)
     UserInput()
     UpdateProjectiles(dt)
     Collisons()
-    ProjectileDeletion()
+    ProjectileDeletion(dt)
+    print("FPS: ", love.timer.getFPS())
     Cam:lookAt(Player.x,Player.y)
+    -- if #TableProjectiles > 0 then
+        -- print(TableProjectiles[#TableProjectiles].x,TableProjectiles[#TableProjectiles].y)
+    -- end
     
 end
 
@@ -96,7 +100,7 @@ function UpdateProjectiles(dt)
     if Shot then
         table.insert(TableProjectiles, {x=Player.x +(math.cos(math.rad(Player.rotX))),
                                         y=Player.y +(math.sin(math.rad(Player.rotX))),
-                                        speed=.5,velocityX=5, velocityY=5, angle=Player.rotX, dmg=5})            
+                                        speed=.5,velocityX=5, velocityY=5, angle=Player.rotX, dmg=5,time=1,curTime=0})            
     end
     for i = 1, #TableProjectiles, 1 do
         TableProjectiles[i].x = TableProjectiles[i].x + (math.cos(math.rad(TableProjectiles[i].angle)) * TableProjectiles[i].velocityX)
@@ -168,39 +172,43 @@ function SpawnAsteroids()
     --Beggning Asteroid
     table.insert(TableAsteroids, {x=100,y=100,width=10,height=10,health=love.math.random(5,20)})
     --Connecting Asteroids
-    for j = 1, 250, 1 do
-        local dir = love.math.random(1,4)
-        if dir == 1 then
-            table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x + TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,20), height=love.math.random(10,20),health=love.math.random(5,20)})
-        elseif dir == 2 then
-            table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x - TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,20), height=love.math.random(10,20),health=love.math.random(5,20)})
-        elseif dir == 3 then
-            table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y + TableAsteroids[#TableAsteroids].height, width=love.math.random(10,20), height=love.math.random(10,20),health=love.math.random(5,20)})
-        elseif dir == 4 then 
-            table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y - TableAsteroids[#TableAsteroids].height, width=love.math.random(10,20), height=love.math.random(10,20),health=love.math.random(5,20)})
+    for i = 1, 50, 1 do
+        table.insert(TableAsteroids, {x=love.math.random(1,2000), y=love.math.random(1,2000),width=10,height=10})
+        for j = 1, 250, 1 do
+            local dir = love.math.random(1,4)
+            if dir == 1 then
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x + TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20)})
+            elseif dir == 2 then
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x - TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20)})
+            elseif dir == 3 then
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y + TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20)})
+            elseif dir == 4 then 
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y - TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20)})
+            end
+        end    
+    end
+    
+    
+    
+
+
+
+end
+
+
+function ProjectileDeletion(dt)
+    for i = #TableProjectiles, 1, -1 do
+        TableProjectiles[i].curTime = TableProjectiles[i].curTime + dt
+        if TableProjectiles[i].curTime > TableProjectiles[i].time then
+            table.remove(TableProjectiles, i)
+            break
         end
         
-    end    
-    
-    
-
-
-
-end
-
-
-function ProjectileDeletion()
-    if #TableProjectiles > 0 then
-        if TableProjectiles[#TableProjectiles].x > 50 + love.graphics.getWidth() then   
-            table.remove(TableProjectiles, #TableProjectiles)
-        else if TableProjectiles[#TableProjectiles].y > 50 + love.graphics.getHeight() then
-            table.remove(TableProjectiles, #TableProjectiles)
-        end
     end
     
-        print(#TableProjectiles)
-    end
+    -- print(#TableProjectiles)
 end
+
 
 
 function AsteroidDamaged(Asteroid, projectile)
@@ -214,3 +222,5 @@ function AsteroidDamaged(Asteroid, projectile)
     
     
 end
+
+
