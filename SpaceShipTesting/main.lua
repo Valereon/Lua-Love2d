@@ -3,7 +3,12 @@ function love.load()
     local Camera = require("Libraries/camera")
     Cam = Camera()
 
- 
+    ParticlesAsteroidDestroyed = love.graphics.newParticleSystem(love.graphics.newImage("Sprites/ParticleWhite.png"), 32)
+    ParticlesAsteroidDestroyed:setParticleLifetime(.5, .75)
+    ParticlesAsteroidDestroyed:setLinearAcceleration(-1500, -1500, 1500, 1500)
+    ParticlesAsteroidDestroyed:setColors(255, 255, 255, 255, 255, 255, 255, 0)
+
+    require("Scripts.inventory")
     require("Scripts/placement")
 
     Player = {x=200,y=200,speed=.25,velocityX=0,velocityY=0,drag=.95, rotX=0, rotSpeed=3, mass=10}
@@ -13,7 +18,7 @@ function love.load()
     PerMeteorMass = 50
     AsteroidDrag = .95
     TableAsteroids = {}
-    -- SpawnAsteroids()
+    SpawnAsteroids()
 
 
 
@@ -25,28 +30,41 @@ end
 
 function love.draw()
     Cam:attach()
-        local spots = Gridify(Player.x, Player.y)
+        love.graphics.draw(ParticlesAsteroidDestroyed)
+        if Emit then
+            ParticlesAsteroidDestroyed:emit(32)
+        end
+        Emit = false
 
-        local mouseX, mouseY = love.mouse.getPosition()
-        local snapX = math.floor(mouseX / 16) * 16
-        local snapY = math.floor(mouseY / 16) * 16
-        love.graphics.rectangle("fill", snapX - 208, snapY - 96, 16, 16)
-        if love.mouse.isDown(1) then
-            for i = 1, #spots, 1 do
-                if spots[i].x == snapX - 208 and spots[i].y == snapY - 96 then
-                    spots[i].occupied = true
-                end
-            end
-        end
-        for i = 1, #spots, 1 do
-            if spots[i].occupied then
-                love.graphics.rectangle("fill", spots[i].x, spots[i].y, spots[i].width, spots[i].height)
-            end
-        end
+        --                                                   SCRAPPED IDEA PLACEMENT
+        -- local mouseX, mouseY = love.mouse.getPosition()
+        -- local spots = Gridify(mouseX, mouseY)
+        
+
+        
+        -- local snapX = math.floor(mouseX / 16) * 16
+        -- local snapY = math.floor(mouseY / 16) * 16
+        -- love.graphics.rectangle("fill", snapX, snapY, 16, 16)
+        -- if love.mouse.isDown(1) then
+        --     for i = 1, #spots, 1 do
+        --         if spots[i].x == snapX and spots[i].y == snapY then
+        --             spots[i].occupied = true
+        --         end
+        --     end
+        -- end
+        -- for i = 1, #spots, 1 do
+        --     if spots[i].occupied then
+        --         love.graphics.rectangle("fill", spots[i].x, spots[i].y, spots[i].width, spots[i].height)
+        --     end
+        -- end
 
         -- for i = 1, #lines, 1 do
         --     love.graphics.rectangle("line", lines[i].x, lines[i].y, lines[i].width, lines[i].height)
         -- end
+        --                                                   SCRAPPED IDEA PLACEMENT
+
+
+        
         love.graphics.rectangle("line",Player.x - 8, Player.y - 8, 16,16)
         --player sprite
         love.graphics.draw(SpritePlayer, Player.x, Player.y, math.rad(Player.rotX + 90), .25, .25, 32, 32, 0, 0)
@@ -68,23 +86,26 @@ function love.draw()
             
         end
     Cam:detach()
+    if InventoryIsOpen == false then
+        love.graphics.print("FPS: " .. tostring(love.timer.getFPS()),10,10, 0, 1, 1)
+        love.graphics.print("Inventory: Tab", 10, 25)
+    else
+        InventoryOpen()
+    end
+
+    
 
             
 end
 
 function love.update(dt)
+    ParticlesAsteroidDestroyed:update(dt)
     UserInput()
     UpdateProjectiles(dt)
     Collisons()
     ProjectileDeletion(dt)
-    -- print("FPS: ", love.timer.getFPS())
-    Cam:lookAt(Player.x,Player.y)
-    -- if #TableProjectiles > 0 then
-        -- print(TableProjectiles[#TableProjectiles].x,TableProjectiles[#TableProjectiles].y)
-    -- end
-    
+    Cam:lookAt(Player.x,Player.y)    
 end
-
 
 function UserInput()
     if love.keyboard.isDown("w") then
@@ -109,6 +130,11 @@ function UserInput()
         Shot = true
     else
         Shot = false
+    end
+    if love.keyboard.isDown("tab") then
+        InventoryIsOpen = true
+    else
+        InventoryIsOpen = false
     end
     
     Player.x = Player.x + Player.velocityX
@@ -204,7 +230,7 @@ function SpawnAsteroids()
     table.insert(TableAsteroids, {x=love.math.random(400,600),y=love.math.random(400,600),width=10,height=10,health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
     --Connecting Asteroids
     for i = 1, 1, 1 do
-        table.insert(TableAsteroids, {x=love.math.random(400,600), y=love.math.random(400,600),width=10,height=10, mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
+        table.insert(TableAsteroids, {x=love.math.random(400,600), y=love.math.random(400,600),width=10,height=10,health=love.math.random(5,20), mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
         for j = 1, 250, 1 do
             local dir = love.math.random(1,4)
             if dir == 1 then
@@ -248,6 +274,8 @@ function AsteroidDamaged(Asteroid, projectile)
     end
     TableAsteroids[Asteroid].health = TableAsteroids[Asteroid].health - TableProjectiles[projectile].dmg
     if TableAsteroids[Asteroid].health <= 0 then
+        ParticlesAsteroidDestroyed:setPosition(TableAsteroids[Asteroid].x, TableAsteroids[Asteroid].y)
+        Emit = true
         table.remove(TableAsteroids, Asteroid)
     end
     
@@ -262,3 +290,4 @@ function UpdateAstroidPos(Velocity,index)
     TableAsteroids[index].velocityX = TableAsteroids[index].velocityX  * AsteroidDrag
     TableAsteroids[index].velocityY = TableAsteroids[index].velocityY  * AsteroidDrag
 end
+
