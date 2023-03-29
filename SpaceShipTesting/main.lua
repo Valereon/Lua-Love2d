@@ -5,8 +5,12 @@ function love.load()
 
     ParticlesAsteroidDestroyed = love.graphics.newParticleSystem(love.graphics.newImage("Sprites/ParticleWhite.png"), 32)
     ParticlesAsteroidDestroyed:setParticleLifetime(.5, .75)
-    ParticlesAsteroidDestroyed:setLinearAcceleration(-1500, -1500, 1500, 1500)
+    ParticlesAsteroidDestroyed:setLinearAcceleration(-750, -750, 750, 750)
     ParticlesAsteroidDestroyed:setColors(255, 255, 255, 255, 255, 255, 255, 0)
+
+    ParticlesSpaceshipFire = love.graphics.newParticleSystem(love.graphics.newImage("Sprites/ParticleWhite.png"), 64)
+    ParticlesSpaceshipFire:setParticleLifetime(1,1.75)
+    ParticlesSpaceshipFire:setLinearAcceleration()
 
     require("Scripts.inventory")
     require("Scripts/placement")
@@ -32,38 +36,10 @@ function love.draw()
     Cam:attach()
         love.graphics.draw(ParticlesAsteroidDestroyed)
         if Emit then
-            ParticlesAsteroidDestroyed:emit(32)
+            ParticlesAsteroidDestroyed:emit(8)
         end
         Emit = false
-
-        --                                                   SCRAPPED IDEA PLACEMENT
-        -- local mouseX, mouseY = love.mouse.getPosition()
-        -- local spots = Gridify(mouseX, mouseY)
         
-
-        
-        -- local snapX = math.floor(mouseX / 16) * 16
-        -- local snapY = math.floor(mouseY / 16) * 16
-        -- love.graphics.rectangle("fill", snapX, snapY, 16, 16)
-        -- if love.mouse.isDown(1) then
-        --     for i = 1, #spots, 1 do
-        --         if spots[i].x == snapX and spots[i].y == snapY then
-        --             spots[i].occupied = true
-        --         end
-        --     end
-        -- end
-        -- for i = 1, #spots, 1 do
-        --     if spots[i].occupied then
-        --         love.graphics.rectangle("fill", spots[i].x, spots[i].y, spots[i].width, spots[i].height)
-        --     end
-        -- end
-
-        -- for i = 1, #lines, 1 do
-        --     love.graphics.rectangle("line", lines[i].x, lines[i].y, lines[i].width, lines[i].height)
-        -- end
-        --                                                   SCRAPPED IDEA PLACEMENT
-
-
         
         love.graphics.rectangle("line",Player.x - 8, Player.y - 8, 16,16)
         --player sprite
@@ -72,9 +48,6 @@ function love.draw()
         
         if #TableProjectiles > 0 then
             for i = 1, #TableProjectiles, 1 do
-                --debug collison box for projectile ↓
-                -- love.graphics.rectangle("line", TableProjectiles[i].x - 15, TableProjectiles[i].y - 5, 10, 10)
-
                 love.graphics.circle("line",TableProjectiles[i].x,
                                             TableProjectiles[i].y, 2.5)
             end
@@ -86,6 +59,9 @@ function love.draw()
             
         end
     Cam:detach()
+    
+
+
     if InventoryIsOpen == false then
         love.graphics.print("FPS: " .. tostring(love.timer.getFPS()),10,10, 0, 1, 1)
         love.graphics.print("Inventory: Tab", 10, 25)
@@ -104,7 +80,7 @@ function love.update(dt)
     UpdateProjectiles(dt)
     Collisons()
     ProjectileDeletion(dt)
-    Cam:lookAt(Player.x,Player.y)    
+    Cam:lookAt(Player.x,Player.y)
 end
 
 function UserInput()
@@ -291,3 +267,32 @@ function UpdateAstroidPos(Velocity,index)
     TableAsteroids[index].velocityY = TableAsteroids[index].velocityY  * AsteroidDrag
 end
 
+
+
+
+--                                                   SCRAPPED IDEA PLACEMENT
+-- local mouseX, mouseY = love.mouse.getPosition()
+-- local spots = Gridify(mouseX, mouseY)
+
+
+
+-- local snapX = math.floor(mouseX / 16) * 16
+-- local snapY = math.floor(mouseY / 16) * 16
+-- love.graphics.rectangle("fill", snapX, snapY, 16, 16)
+-- if love.mouse.isDown(1) then
+--     for i = 1, #spots, 1 do
+--         if spots[i].x == snapX and spots[i].y == snapY then
+--             spots[i].occupied = true
+--         end
+--     end
+-- end
+-- for i = 1, #spots, 1 do
+--     if spots[i].occupied then
+--         love.graphics.rectangle("fill", spots[i].x, spots[i].y, spots[i].width, spots[i].height)
+--     end
+-- end
+
+-- for i = 1, #lines, 1 do
+--     love.graphics.rectangle("line", lines[i].x, lines[i].y, lines[i].width, lines[i].height)
+-- end
+--                                                   SCRAPPED IDEA PLACEMENT
