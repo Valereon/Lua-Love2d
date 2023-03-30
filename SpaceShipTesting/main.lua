@@ -8,21 +8,23 @@ function love.load()
     ParticlesAsteroidDestroyed:setLinearAcceleration(-750, -750, 750, 750)
     ParticlesAsteroidDestroyed:setColors(255, 255, 255, 255, 255, 255, 255, 0)
 
-    ParticlesSpaceshipFire = love.graphics.newParticleSystem(love.graphics.newImage("Sprites/ParticleWhite.png"), 64)
-    ParticlesSpaceshipFire:setParticleLifetime(1,1.75)
-    ParticlesSpaceshipFire:setLinearAcceleration()
 
     require("Scripts.inventory")
-    require("Scripts/placement")
+    require("Scripts.map")
+    require("Scripts.WasPressed")
 
     Player = {x=200,y=200,speed=.25,velocityX=0,velocityY=0,drag=.95, rotX=0, rotSpeed=3, mass=10}
     SpritePlayer = love.graphics.newImage("Sprites/space.png")
     TableProjectiles = {}
-    Asteroid = {x=0,y=0,speed=.5,velocityX=0,velocityY=0,mass=10,radius=8}
     PerMeteorMass = 50
     AsteroidDrag = .95
     TableAsteroids = {}
     SpawnAsteroids()
+
+    InventoryDefault()
+
+    DefineOverviewMap(TableAsteroids,{},{})
+
 
 
 
@@ -30,11 +32,11 @@ function love.load()
 end
 
 
-
-
 function love.draw()
     Cam:attach()
         love.graphics.draw(ParticlesAsteroidDestroyed)
+        
+
         if Emit then
             ParticlesAsteroidDestroyed:emit(8)
         end
@@ -55,27 +57,36 @@ function love.draw()
  
         for i = 1, #TableAsteroids, 1 do
             love.graphics.rectangle("fill",TableAsteroids[i].x,TableAsteroids[i].y,
-                                        TableAsteroids[i].width,TableAsteroids[i].height)
-            
+            TableAsteroids[i].width,TableAsteroids[i].height)
         end
     Cam:detach()
+        
+
+    if MinimapOpen then
+        Minimap(Player.x,Player.y)
+    end
+
+    love.graphics.print("FPS: " .. tostring(love.timer.getFPS()),10,10, 0, 1, 1)
     
-
-
-    if InventoryIsOpen == false then
-        love.graphics.print("FPS: " .. tostring(love.timer.getFPS()),10,10, 0, 1, 1)
-        love.graphics.print("Inventory: Tab", 10, 25)
+    if InventoryIsOpen == false and MapIsOpen == false then
+        love.graphics.print("Inventory Hold: Tab", 10, 25)
+        love.graphics.print("Toggle MiniMap: T", 10, 40)
+        love.graphics.print("Map Hold: G", 10, 55)
+        love.graphics.print("Coordanites: " .. tostring(math.floor(Player.x)) .. ", " .. tostring(math.floor(Player.y)), 10, 70)
+        love.graphics.print("Closest Asteroid: " .. tostring(math.floor(ClosestAsteroid.x)) ..  ", " .. tostring(math.floor(ClosestAsteroid.y)), 10, 85)
+    elseif MapIsOpen then
+        ShowMap(Player.x,Player.y)
     else
         InventoryOpen()
     end
-
-    
 
             
 end
 
 function love.update(dt)
     ParticlesAsteroidDestroyed:update(dt)
+
+    CloseAsteroid()
     UserInput()
     UpdateProjectiles(dt)
     Collisons()
@@ -112,14 +123,24 @@ function UserInput()
     else
         InventoryIsOpen = false
     end
+    if love.keyboard.isDown("g") then
+        MapIsOpen = true
+    else
+        MapIsOpen = false
+    end
+    if love.keyboard.wasPressed("t") then
+        if MinimapOpen then
+            MinimapOpen = false
+        else
+            MinimapOpen = true
+        end
+    end
     
     Player.x = Player.x + Player.velocityX
     Player.y = Player.y + Player.velocityY
     Player.velocityX = Player.velocityX * Player.drag
     Player.velocityY = Player.velocityY * Player.drag
 end
-
-
 
 
 function UpdateProjectiles(dt)
@@ -161,16 +182,17 @@ function Collisons()
         if Destroyed then
             break
         end
-        local playerHit = CheckCollision(TableAsteroids[ast].x,TableAsteroids[ast].y,15,10, Player.x - 8, Player.y - 8, 16,16)
-        if playerHit then
-            -- print("PLAYER HIT", Player.x, " ", Player.y)
-            for AsteroidHit = 1, #TableAsteroids, 250 do
-                FinalVelocity = (100 * Player.velocityX + Player.velocityY)/(Player.mass + 100)
-                print(FinalVelocity)
-                
+        for rock = 1, #TableAsteroids[ast], 1 do
+            local playerHit = CheckCollision(TableAsteroids[ast][rock].x,TableAsteroids[ast][rock].y,15,10, Player.x - 8, Player.y - 8, 16,16)
+            if playerHit then
+                -- print("PLAYER HIT", Player.x, " ", Player.y)
+                for AsteroidHit = 1, #TableAsteroids, 250 do
+                    FinalVelocity = (100 * Player.velocityX + Player.velocityY)/(Player.mass + 100)
+                    print(FinalVelocity)
+                    
+                end
+                UpdateAstroidPos(FinalVelocity,ast)
             end
-            UpdateAstroidPos(FinalVelocity,ast)
-            
         end
         
         for proj = 1, #TableProjectiles, 1 do
@@ -189,34 +211,26 @@ function Collisons()
 end
 
 
-
-
 function SpawnAsteroids()
-    -- for i = 1, 10, 1 do
-    --     table.insert(TableAsteroids, {x=love.math.random(1,love.graphics.getWidth()),
-    --                                   y=love.math.random(1,love.graphics.getHeight()),
-    --                                   velocityX=0, velocityY=0, mass=10,width=15,height=10})
-    -- end
-    -- format is x=?,y=?,width=?,height=?
+    -- 4 astroid rock types
+    -- 1. rock filled rock
+    -- 2. ice filled rock
+    -- 3. iron filled rock
+    -- 4. gold filled rock
 
 
-    
-
-    --Beggning Asteroid
-    table.insert(TableAsteroids, {x=love.math.random(400,600),y=love.math.random(400,600),width=10,height=10,health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
-    --Connecting Asteroids
-    for i = 1, 1, 1 do
-        table.insert(TableAsteroids, {x=love.math.random(400,600), y=love.math.random(400,600),width=10,height=10,health=love.math.random(5,20), mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
+    for i = 1, 5, 1 do
+        table.insert(TableAsteroids, {x=love.math.random(1000,5000), y=love.math.random(1000,5000),width=10,height=10,health=love.math.random(5,20), mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,type=love.math.random(1,4)})
         for j = 1, 250, 1 do
             local dir = love.math.random(1,4)
             if dir == 1 then
-                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x + TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x + TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass,type=love.math.random(1,4)})
             elseif dir == 2 then
-                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x - TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x - TableAsteroids[#TableAsteroids].width, y=TableAsteroids[#TableAsteroids].y, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass,type=love.math.random(1,4)})
             elseif dir == 3 then
-                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y + TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
-            elseif dir == 4 then 
-                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y - TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,})
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y + TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass,type=love.math.random(1,4)})
+            elseif dir == 4 then
+                table.insert(TableAsteroids, {x=TableAsteroids[#TableAsteroids].x, y=TableAsteroids[#TableAsteroids].y - TableAsteroids[#TableAsteroids].height, width=love.math.random(10,40), height=love.math.random(10,40),health=love.math.random(5,20),mass=PerMeteorMass,type=love.math.random(1,4)})
             end
         end
     end
@@ -252,6 +266,8 @@ function AsteroidDamaged(Asteroid, projectile)
     if TableAsteroids[Asteroid].health <= 0 then
         ParticlesAsteroidDestroyed:setPosition(TableAsteroids[Asteroid].x, TableAsteroids[Asteroid].y)
         Emit = true
+        print(Inventory[TableAsteroids[Asteroid].type].amount)
+        Inventory[TableAsteroids[Asteroid].type].amount = Inventory[TableAsteroids[Asteroid].type].amount + 5
         table.remove(TableAsteroids, Asteroid)
     end
     
@@ -260,14 +276,26 @@ end
 
 
 
-function UpdateAstroidPos(Velocity,index)
-    TableAsteroids[index].x = TableAsteroids[index].x  + Velocity
-    TableAsteroids[index].y = TableAsteroids[index].y  + Velocity
-    TableAsteroids[index].velocityX = TableAsteroids[index].velocityX  * AsteroidDrag
-    TableAsteroids[index].velocityY = TableAsteroids[index].velocityY  * AsteroidDrag
+function UpdateAstroidPos(Velocity,Asteroid)
+    TableAsteroids[Asteroid].x = TableAsteroids[Asteroid].x  + Velocity
+    TableAsteroids[Asteroid].y = TableAsteroids[Asteroid].y  + Velocity
+    TableAsteroids[Asteroid].velocityX = TableAsteroids[Asteroid].velocityX  * AsteroidDrag
+    TableAsteroids[Asteroid].velocityY = TableAsteroids[Asteroid].velocityY  * AsteroidDrag
 end
 
 
+function CloseAsteroid()
+    ClosestAsteroid = {x=0,y=0}
+    ClosestAsteroidDistance = 10000
+    for i = 1, #TableAsteroids, 1 do
+        local Distance = math.sqrt((Player.x - TableAsteroids[i].x)^2 + (Player.y - TableAsteroids[i].y)^2)
+        if Distance < ClosestAsteroidDistance then
+            ClosestAsteroidDistance = Distance
+            ClosestAsteroid.x = TableAsteroids[i].x
+            ClosestAsteroid.y = TableAsteroids[i].y
+        end
+    end
+end
 
 
 --                                                   SCRAPPED IDEA PLACEMENT
@@ -296,3 +324,18 @@ end
 --     love.graphics.rectangle("line", lines[i].x, lines[i].y, lines[i].width, lines[i].height)
 -- end
 --                                                   SCRAPPED IDEA PLACEMENT
+
+
+
+
+                                    -- PARTICLE SYSTEMS
+
+    -- ParticlesSpaceshipFire = love.graphics.newParticleSystem(love.graphics.newImage("Sprites/ParticleWhite.png"), 64)
+    -- ParticlesSpaceshipFire:setParticleLifetime(.25,.5)
+    -- ParticlesSpaceshipFire:setEmissionRate(128)
+    -- ParticlesSpaceshipFire:setColors(255, 165, 255, 255, 255, 0, 0, 255)
+    -- love.graphics.draw(ParticlesSpaceshipFire)
+    --     ParticlesSpaceshipFire:setLinearAcceleration(0,0,Player.velocityX * 10, Player.velocityY * 10)
+    -- ParticlesSpaceshipFire:setPosition(Player.x + (math.cos(math.rad(Player.rotX))) - 100,Player.y + (math.sin(math.rad(Player.rotX))))
+    -- ParticlesSpaceshipFire:update(dt)
+                                    --PArticles systems 
