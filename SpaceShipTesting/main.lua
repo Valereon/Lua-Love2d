@@ -60,8 +60,23 @@ function love.draw()
             love.graphics.rectangle("fill",TableAsteroids[i].x,TableAsteroids[i].y,
             TableAsteroids[i].width,TableAsteroids[i].height)
         end
-        for i = 1, #NoiseMap, 1 do
-            
+        local perlinX = 0
+        local perlinY = 0
+        for i = 1, #NoiseMap, 2 do
+            local x = NoiseMap[i]
+            local y = NoiseMap[i + 1]
+            if x > .5 or y > .5 then
+                love.graphics.setColor(x,y,x,1)
+                love.graphics.rectangle("fill",perlinX,perlinY,1,1)
+            else
+                love.graphics.setColor(x,y,x,1)
+                love.graphics.rectangle("fill",perlinX,perlinY,1,1)
+            end
+            perlinX = perlinX + 1
+            if perlinX > 250 then
+                perlinY = perlinY + 1
+                perlinX = 0
+            end
         end
     Cam:detach()
         
