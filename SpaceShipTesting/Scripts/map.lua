@@ -35,7 +35,7 @@ function Minimap(PlayerX, PlayerY)
 
     love.graphics.setColor(1,0,0,1)
     for i = 1, #Map, 1 do
-        love.graphics.rectangle("fill", Map[i].x, Map[i].y, Map[i].width, Map[i].height)
+        love.graphics.rectangle("fill", Map[i].x/5, Map[i].y/5, Map[i].width/5, Map[i].height/5)
     end
 
     

@@ -1,0 +1,6 @@
+Camera Library
+https://github.com/vrld/hump
+
+
+Input Library
+https://github.com/SpaceCat-Chan/LoveKeys
