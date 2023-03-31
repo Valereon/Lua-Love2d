@@ -11,6 +11,7 @@ function love.load()
 
     require("Scripts.inventory")
     require("Scripts.map")
+    require("Scripts.WorldGen")
     LoveKeys = require("Libraries.LoveKeys")
 
     Player = {x=200,y=200,speed=.25,velocityX=0,velocityY=0,drag=.95, rotX=0, rotSpeed=3, mass=10}
@@ -26,7 +27,7 @@ function love.load()
     DefineOverviewMap(TableAsteroids,{},{})
 
 
-
+    NoiseMap = GenerateNoise(250,250)
 
 
 end
@@ -59,12 +60,15 @@ function love.draw()
             love.graphics.rectangle("fill",TableAsteroids[i].x,TableAsteroids[i].y,
             TableAsteroids[i].width,TableAsteroids[i].height)
         end
+        for i = 1, #NoiseMap, 1 do
+            
+        end
     Cam:detach()
         
 
-    if MinimapOpen then
-        Minimap(Player.x,Player.y)
-    end
+    -- if MinimapOpen then
+    --     Minimap(Player.x,Player.y)
+    -- end
 
     love.graphics.print("FPS: " .. tostring(love.timer.getFPS()),10,10, 0, 1, 1)
     
