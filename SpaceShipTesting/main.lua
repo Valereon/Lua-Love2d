@@ -61,17 +61,24 @@ function love.draw()
             end
         end
  
-        for i = 1, #TableAsteroids, 1 do
-            love.graphics.rectangle("fill",TableAsteroids[i].x,TableAsteroids[i].y,
-            TableAsteroids[i].width,TableAsteroids[i].height)
+        for i = 1, #OnscreenObjects, 1 do
+            love.graphics.rectangle("fill", OnscreenObjects[i].x, OnscreenObjects[i].y, OnscreenObjects[i].width, OnscreenObjects[i].height)
         end
 
-        for i = 1, #TableSpaceStations, 1 do
-            love.graphics.draw(SpriteSpaceStations,TableSpaceStations[i].x,TableSpaceStations[i].y,0,1,1)
-        end
-        local perlinX = 0
-        local perlinY = 0
-        
+        --                                                    OLD DRAWING METHOD SLOW AND INEFFICENT
+        -- for i = 1, #TableAsteroids, 1 do
+        --     love.graphics.rectangle("fill",TableAsteroids[i].x,TableAsteroids[i].y,
+        --     TableAsteroids[i].width,TableAsteroids[i].height)
+        -- end
+
+        -- for i = 1, #TableSpaceStations, 1 do
+        --     love.graphics.draw(SpriteSpaceStations,TableSpaceStations[i].x,TableSpaceStations[i].y,0,1,1)
+        -- end
+        -- local perlinX = 0
+        -- local perlinY = 0
+
+
+
         -- for i = 1, #NoiseMap, 2 do
         --     local x = NoiseMap[i]
         --     local y = NoiseMap[i + 1]
@@ -114,12 +121,13 @@ end
 
 function love.update(dt)
     ParticlesAsteroidDestroyed:update(dt)
-
     CloseAsteroid()
+    ShowOnscreenObjects()
     UserInput()
     UpdateProjectiles(dt)
     Collisons()
     ProjectileDeletion(dt)
+    print("Entites:", #OnscreenObjects)
     Cam:lookAt(Player.x,Player.y)
 end
 
@@ -307,7 +315,7 @@ end
 
 function CloseAsteroid()
     ClosestAsteroid = {x=0,y=0}
-    ClosestAsteroidDistance = 10000
+    ClosestAsteroidDistance = 100000
     for i = 1, #TableAsteroids, 1 do
         local Distance = math.sqrt((Player.x - TableAsteroids[i].x)^2 + (Player.y - TableAsteroids[i].y)^2)
         if Distance < ClosestAsteroidDistance then
@@ -320,7 +328,27 @@ end
 
 
 function SpawnSpaceStations()
-    for i = 1, 2, 1 do
-        table.insert(TableSpaceStations, {x=love.math.random(300,8000), y=love.math.random(300,6000)})
+    for i = 1, 10, 1 do
+        table.insert(TableSpaceStations, {x=love.math.random(300,40000), y=love.math.random(300,30000)})
+    end
+end
+
+
+
+function ShowOnscreenObjects()
+    local asteroidNum
+    for i = 1, #TableAsteroids, 1 do
+        if CheckCollision(TableAsteroids[i].x,TableAsteroids[i].y, 850,850, Player.x,Player.y,1000,1000) then
+            asteroidNum = i
+            for j = asteroidNum, asteroidNum + 250, 1 do
+                table.insert(OnscreenObjects, TableAsteroids[j])
+            end
+            -- for j = asteroidNum - 250, asteroidNum, 1 do
+            --     table.insert(OnscreenObjects, TableAsteroids[j])
+            -- end
+            break
+        else
+            OnscreenObjects = {}
+        end    
     end
 end
