@@ -9,6 +9,7 @@ function love.load()
     ParticlesAsteroidDestroyed:setColors(255, 255, 255, 255, 255, 255, 255, 0)
 
 
+
     require("Scripts.inventory")
     require("Scripts.map")
     require("Scripts.WorldGen")
@@ -16,20 +17,24 @@ function love.load()
 
     Player = {x=200,y=200,speed=.25,velocityX=0,velocityY=0,drag=.95, rotX=0, rotSpeed=3, mass=10}
     SpritePlayer = love.graphics.newImage("Sprites/space.png")
+    SpriteSpaceStations = love.graphics.newImage("Sprites/SpaceStation.png")
     TableProjectiles = {}
     PerMeteorMass = 50
     AsteroidDrag = .95
     TableAsteroids = {}
+    TableSpaceStations = {}
+    OnscreenObjects = {}
+
     SpawnAsteroids()
+
+    SpawnSpaceStations()
 
     InventoryDefault()
 
-    DefineOverviewMap(TableAsteroids,{},{})
+    DefineOverviewMap(TableAsteroids,TableSpaceStations,{})
 
 
     NoiseMap = GenerateNoise(250,250)
-
-
 end
 
 
@@ -60,24 +65,29 @@ function love.draw()
             love.graphics.rectangle("fill",TableAsteroids[i].x,TableAsteroids[i].y,
             TableAsteroids[i].width,TableAsteroids[i].height)
         end
+
+        for i = 1, #TableSpaceStations, 1 do
+            love.graphics.draw(SpriteSpaceStations,TableSpaceStations[i].x,TableSpaceStations[i].y,0,1,1)
+        end
         local perlinX = 0
         local perlinY = 0
-        for i = 1, #NoiseMap, 2 do
-            local x = NoiseMap[i]
-            local y = NoiseMap[i + 1]
-            if x > .5 or y > .5 then
-                love.graphics.setColor(x,y,x,1)
-                love.graphics.rectangle("fill",perlinX,perlinY,1,1)
-            else
-                love.graphics.setColor(x,y,x,1)
-                love.graphics.rectangle("fill",perlinX,perlinY,1,1)
-            end
-            perlinX = perlinX + 1
-            if perlinX > 250 then
-                perlinY = perlinY + 1
-                perlinX = 0
-            end
-        end
+        
+        -- for i = 1, #NoiseMap, 2 do
+        --     local x = NoiseMap[i]
+        --     local y = NoiseMap[i + 1]
+        --     if x > .5 or y > .5 then
+        --         love.graphics.setColor(x,y,x,1)
+        --         love.graphics.rectangle("fill",perlinX,perlinY,1,1)
+        --     else
+        --         love.graphics.setColor(x,y,x,1)
+        --         love.graphics.rectangle("fill",perlinX,perlinY,1,1)
+        --     end
+        --     perlinX = perlinX + 1
+        --     if perlinX > 250 then
+        --         perlinY = perlinY + 1
+        --         perlinX = 0
+        --     end
+        -- end
     Cam:detach()
         
 
@@ -230,8 +240,8 @@ function SpawnAsteroids()
     -- 4. gold filled rock
 
 
-    for i = 1, 5, 1 do
-        table.insert(TableAsteroids, {x=love.math.random(1000,5000), y=love.math.random(1000,5000),width=10,height=10,health=love.math.random(5,20), mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,type=love.math.random(1,4)})
+    for i = 1, 50, 1 do
+        table.insert(TableAsteroids, {x=love.math.random(300,40000), y=love.math.random(300,30000),width=10,height=10,health=love.math.random(5,20), mass=PerMeteorMass, drag=AsteroidDrag,velocityX=0, velocityY=0,type=love.math.random(1,4)})
         for j = 1, 250, 1 do
             local dir = love.math.random(1,4)
             if dir == 1 then
@@ -305,5 +315,12 @@ function CloseAsteroid()
             ClosestAsteroid.x = TableAsteroids[i].x
             ClosestAsteroid.y = TableAsteroids[i].y
         end
+    end
+end
+
+
+function SpawnSpaceStations()
+    for i = 1, 2, 1 do
+        table.insert(TableSpaceStations, {x=love.math.random(300,8000), y=love.math.random(300,6000)})
     end
 end
